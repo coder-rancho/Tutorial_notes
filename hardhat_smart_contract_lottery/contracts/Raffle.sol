@@ -11,6 +11,12 @@ error Raffle__TransferFailed();
 error Raffle__NotOpen();
 error Raffle__UpkeepNotNeeded(uint currentBalance, uint numPlayers, uint raffleState);
 
+/**
+@title Raffle Contract
+@author Naman Vyas 
+@notice this contract is untamperable.
+@dev This implements chainlink's vrf and chainlink's keepers
+*/
 contract Raffle is VRFConsumerBaseV2, KeeperCompatibleInterface {
 
     /* Type declaration */
@@ -69,14 +75,6 @@ contract Raffle is VRFConsumerBaseV2, KeeperCompatibleInterface {
         emit RaffleEnter(msg.sender);
     }
 
-    function getEnteranceFee() public view returns (uint) {
-        return i_entranceFee;
-    }
-
-    function getPlayer(uint index) public view returns (address payable) {
-        return s_players[index];
-    }
-
     function performUpkeep( bytes calldata /*performData*/ ) external override {
         // Request random number
         // do something with it
@@ -130,4 +128,36 @@ contract Raffle is VRFConsumerBaseV2, KeeperCompatibleInterface {
        bool hasBalance = address(this).balance > 0;
        upkeepNeeded = (isOpen && hasPlayers && hasBalance && timePassed);
     }
+
+    function getEnteranceFee() public view returns (uint) {
+        return i_entranceFee;
+    }
+
+    function getPlayer(uint index) public view returns (address payable) {
+        return s_players[index];
+    }
+
+    function getRecentWinner() public view returns (address) {
+        return s_recentWinner;
+    }
+
+    function getNumWords() public pure returns (uint) {
+        /*
+        Since NUM_WORDS is a constant variable => it is stored in bytes_code of contract, hence it is not reading from storage
+        */
+        return NUM_WORDS;
+    }
+
+    function getNumberOfPlayers() public view returns (uint) {
+        return s_players.length;
+    }
+
+    function getLatestTimeStamp() public view returns (uint) {
+        return s_lastTimestamp;
+    }
+
+    function getRequestConfirmations() public pure returns (uint) {
+        return REQUEST_CONFORMATIONS;
+    }
+
 }
