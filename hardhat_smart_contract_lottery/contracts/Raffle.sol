@@ -9,7 +9,11 @@ import "@chainlink/contracts/src/v0.8/interfaces/KeeperCompatibleInterface.sol";
 error Raffle__NotEnoughETHEntered();
 error Raffle__TransferFailed();
 error Raffle__NotOpen();
-error Raffle__UpkeepNotNeeded(uint currentBalance, uint numPlayers, uint raffleState);
+error Raffle__UpkeepNotNeeded(
+    uint currentBalance,
+    uint numPlayers,
+    uint raffleState
+);
 
 /**
 @title Raffle Contract
@@ -18,7 +22,6 @@ error Raffle__UpkeepNotNeeded(uint currentBalance, uint numPlayers, uint raffleS
 @dev This implements chainlink's vrf and chainlink's keepers
 */
 contract Raffle is VRFConsumerBaseV2, KeeperCompatibleInterface {
-
     /* Type declaration */
     enum RaffleState {
         OPEN,
@@ -38,8 +41,6 @@ contract Raffle is VRFConsumerBaseV2, KeeperCompatibleInterface {
     uint64 private immutable i_subscriptionId;
     uint32 private immutable i_callbackGasLimit;
 
-
-
     uint16 private constant REQUEST_CONFORMATIONS = 3;
     uint32 private constant NUM_WORDS = 1;
 
@@ -53,7 +54,7 @@ contract Raffle is VRFConsumerBaseV2, KeeperCompatibleInterface {
         uint64 subscriptionId,
         uint32 callbackGasLimit,
         uint interval
-        ) VRFConsumerBaseV2(vrfCoordinatorV2) {
+    ) VRFConsumerBaseV2(vrfCoordinatorV2) {
         i_entranceFee = entranceFee;
         i_vrfCoordinator = VRFCoordinatorV2Interface(vrfCoordinatorV2);
         i_gasLane = gasLane;
@@ -75,7 +76,9 @@ contract Raffle is VRFConsumerBaseV2, KeeperCompatibleInterface {
         emit RaffleEnter(msg.sender);
     }
 
-    function performUpkeep( bytes calldata /*performData*/ ) external override {
+    function performUpkeep(
+        bytes calldata /*performData*/
+    ) external override {
         // Request random number
         // do something with it
         // 2 txn proces
@@ -98,7 +101,10 @@ contract Raffle is VRFConsumerBaseV2, KeeperCompatibleInterface {
         );
     }
 
-    function fulfillRandomWords(uint /* requestId */, uint[] memory randomWords) internal override {
+    function fulfillRandomWords(
+        uint, /* requestId */
+        uint[] memory randomWords
+    ) internal override {
         uint indexOfWinner = randomWords[0] % s_players.length;
         address payable recentWinner = s_players[indexOfWinner];
         s_recentWinner = recentWinner;
@@ -112,7 +118,7 @@ contract Raffle is VRFConsumerBaseV2, KeeperCompatibleInterface {
         delete s_players;
         s_lastTimestamp = block.timestamp;
     }
-    
+
     /**
     @dev This is the function that chainlink nodes look for the `upkeepNeeded` to return true.
     The following should be true in order to return true :-
@@ -121,12 +127,22 @@ contract Raffle is VRFConsumerBaseV2, KeeperCompatibleInterface {
     3. The subscription is funded with some link.
     4. The lottery should be in an "Open" state.
     */
-    function checkUpkeep(bytes calldata /* checkData */) external view override returns (bool upkeepNeeded, bytes memory /* performData */) {
-       bool isOpen = (RaffleState.OPEN == s_raffleState);
-       bool timePassed = ((block.timestamp - s_lastTimestamp) > i_interval);
-       bool hasPlayers = (s_players.length > 0);
-       bool hasBalance = address(this).balance > 0;
-       upkeepNeeded = (isOpen && hasPlayers && hasBalance && timePassed);
+    function checkUpkeep(
+        bytes calldata /* checkData */
+    )
+        external
+        view
+        override
+        returns (
+            bool upkeepNeeded,
+            bytes memory /* performData */
+        )
+    {
+        bool isOpen = (RaffleState.OPEN == s_raffleState);
+        bool timePassed = ((block.timestamp - s_lastTimestamp) > i_interval);
+        bool hasPlayers = (s_players.length > 0);
+        bool hasBalance = address(this).balance > 0;
+        upkeepNeeded = (isOpen && hasPlayers && hasBalance && timePassed);
     }
 
     function getEnteranceFee() public view returns (uint) {
@@ -159,5 +175,4 @@ contract Raffle is VRFConsumerBaseV2, KeeperCompatibleInterface {
     function getRequestConfirmations() public pure returns (uint) {
         return REQUEST_CONFORMATIONS;
     }
-
 }
